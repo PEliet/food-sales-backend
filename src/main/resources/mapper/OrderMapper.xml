@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.foodsales.mapper.OrderMapper">
+    <select id="selectOrderStats" resultType="java.util.Map">
+        SELECT COUNT(*) as totalOrders, COALESCE(SUM(pay_amount), 0) as totalRevenue,
+               SUM(CASE WHEN status = 'paid' THEN 1 ELSE 0 END) as pendingShip,
+               SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pendingPay
+        FROM orders WHERE DATE(create_time) = CURDATE()
+    </select>
+    <select id="selectSalesTrend" resultType="java.util.Map">
+        SELECT DATE(create_time) as date, COUNT(*) as orderCount,
+               COALESCE(SUM(pay_amount), 0) as revenue
+        FROM orders WHERE status IN ('paid','shipped','received')
+        AND create_time >= #{startTime}
+        GROUP BY DATE(create_time) ORDER BY date
+    </select>
+</mapper>
